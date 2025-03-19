@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia del Rinoceronte</title>
+    <style>
+        /* Variables CSS */
+        :root {
+            --primary-color: #4a2c2a;
+            --secondary-color: #8d5524;
+            --success-color: #27ae60;
+            --error-color: #c0392b;
+            --bg-color: #e0d4b8;
+            --text-color: #333;
+            --glow-color: rgba(39, 174, 96, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            background-image: url('https://www.transparenttextures.com/patterns/gray-floral.png');
+        }
+
+        .container {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border-bottom: 5px solid var(--secondary-color);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+        }
+
+        header h1::before {
+            content: "🦏 ";
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .question-box {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 100%;
+            text-align: center;
+            border: 3px solid var(--secondary-color);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .question-box--success {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--glow-color);
+            background: linear-gradient(135deg, #e0f7fa, #b9f6ca);
+        }
+
+        .question-box h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .option-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .option-btn:hover {
+            background-color: var(--primary-color);
+        }
+
+        .option-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            font-size: 2rem;
+            margin: 1rem 0;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .feedback--visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .feedback--success {
+            color: var(--success-color);
+        }
+
+        .feedback--error {
+            color: var(--error-color);
+        }
+
+        .explanation {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .next-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .next-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .score-box {
+            text-align: center;
+        }
+
+        .start-box, .result-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-align: center;
+            border: 3px solid var(--primary-color);
+        }
+
+        .start-box button {
+            margin: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: white;
+            background: var(--primary-color);
+        }
+
+        /* Media Queries */
+        @media (min-width: 600px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .question-box h2 {
+                font-size: 1.5rem;
+            }
+
+            .options {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Trivia del Rinoceronte</h1>
+        </header>
+        <main id="mainContent"></main>
+        <footer>
+            <p>Creado por [Grok 3 - xAI] - 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        // Todas las preguntas en un solo conjunto
+        const questions = [
+            { question: "¿En qué año comenzó la Segunda Guerra Mundial?", options: ["1935", "1939", "1941", "1945"], correct: "1939", explanation: "La Segunda Guerra Mundial empezó el 1 de septiembre de 1939 con la invasión de Polonia por Alemania." },
+            { question: "¿Quién descubrió América en 1492?", options: ["Cristóbal Colón", "Marco Polo", "Vasco da Gama", "Fernando Magallanes"], correct: "Cristóbal Colón", explanation: "Colón llegó a América el 12 de octubre de 1492, buscando una ruta a Asia." },
+            { question: "¿Qué civilización construyó las pirámides de Giza?", options: ["Romanos", "Egipcios", "Mayas", "Griegos"], correct: "Egipcios", explanation: "Los egipcios las construyeron alrededor del 2630 a.C. como tumbas para sus faraones." },
+            { question: "¿En qué año cayó el Muro de Berlín?", options: ["1985", "1989", "1991", "1995"], correct: "1989", explanation: "El Muro de Berlín cayó el 9 de noviembre de 1989, marcando el fin de la Guerra Fría." },
+            { question: "¿Qué país lideró la Revolución Industrial?", options: ["Francia", "Reino Unido", "Alemania", "EE.UU."], correct: "Reino Unido", explanation: "El Reino Unido inició la Revolución Industrial en el siglo XVIII con avances en textiles y maquinaria." },
+            { question: "¿Quién fue el primer emperador de Roma?", options: ["Julio César", "Augusto", "Nerón", "Constantino"], correct: "Augusto", explanation: "Augusto, antes Octavio, se convirtió en el primer emperador en el 27 a.C." },
+            { question: "¿Qué guerra tuvo lugar entre 1914 y 1918?", options: ["Guerra Civil Española", "Primera Guerra Mundial", "Segunda Guerra Mundial", "Guerra de los Cien Años"], correct: "Primera Guerra Mundial", explanation: "La Primera Guerra Mundial ocurrió entre 1914 y 1918, involucrando a muchas naciones." },
+            { question: "¿En qué año llegó el hombre a la Luna?", options: ["1965", "1969", "1972", "1980"], correct: "1969", explanation: "El 20 de julio de 1969, la misión Apolo 11 llevó a Neil Armstrong a la Luna." },
+            { question: "¿Qué imperio conquistó Constantinopla en 1453?", options: ["Imperio Romano", "Imperio Otomano", "Imperio Bizantino", "Imperio Mongol"], correct: "Imperio Otomano", explanation: "El Imperio Otomano, liderado por Mehmed II, tomó Constantinopla en 1453." },
+            { question: "¿Quién fue el líder de la Revolución Francesa que murió guillotinado?", options: ["Luis XVI", "Robespierre", "Napoleón", "Danton"], correct: "Robespierre", explanation: "Maximilien Robespierre fue ejecutado en 1794 durante el Reinado del Terror." },
+            { question: "¿Qué continente es el más grande por área?", options: ["África", "Asia", "América", "Europa"], correct: "Asia", explanation: "Asia tiene una superficie de aproximadamente 44.58 millones de km²." },
+            { question: "¿Cuál es el país más grande del mundo?", options: ["China", "Rusia", "EE.UU.", "Brasil"], correct: "Rusia", explanation: "Rusia abarca más de 17 millones de km²." },
+            { question: "¿En qué país se encuentra el Monte Everest?", options: ["India", "Nepal", "China", "Bután"], correct: "Nepal", explanation: "El Everest está en la frontera entre Nepal y China." },
+            { question: "¿Qué océano es el más grande del mundo?", options: ["Atlántico", "Índico", "Ártico", "Pacífico"], correct: "Pacífico", explanation: "El Océano Pacífico cubre unos 155.6 millones de km²." },
+            { question: "¿Cuál es la capital de Australia?", options: ["Sídney", "Melbourne", "Canberra", "Brisbane"], correct: "Canberra", explanation: "Canberra fue elegida como capital en 1908." },
+            { question: "¿Qué río es el más largo del mundo?", options: ["Amazonas", "Nilo", "Yangtsé", "Misisipi"], correct: "Amazonas", explanation: "El Amazonas tiene unos 6,992 km de longitud." },
+            { question: "¿En qué continente está el desierto del Sahara?", options: ["Asia", "África", "Australia", "América"], correct: "África", explanation: "El Sahara es el desierto cálido más grande del mundo." },
+            { question: "¿Qué país tiene más islas en el mundo?", options: ["Indonesia", "Filipinas", "Suecia", "Japón"], correct: "Indonesia", explanation: "Indonesia tiene más de 17,000 islas." },
+            { question: "¿Cuál es el lago más profundo del mundo?", options: ["Lago Superior", "Lago Baikal", "Lago Titicaca", "Lago Michigan"], correct: "Lago Baikal", explanation: "El Baikal, en Rusia, tiene 1,642 m de profundidad." },
+            { question: "¿Qué país comparte frontera con 14 naciones?", options: ["China", "Rusia", "Brasil", "India"], correct: "Rusia", explanation: "Rusia tiene la mayor cantidad de fronteras terrestres." },
+            { question: "¿Qué animal es conocido por su cuello largo?", options: ["Elefante", "Jirafa", "Rinoceronte", "Cocodrilo"], correct: "Jirafa", explanation: "La jirafa tiene un cuello que puede medir hasta 2 metros." },
+            { question: "¿Qué tipo de animal es una ballena?", options: ["Pez", "Mamífero", "Reptil", "Anfibio"], correct: "Mamífero", explanation: "Las ballenas son mamíferos marinos que respiran aire." },
+            { question: "¿Qué insecto produce miel?", options: ["Avispa", "Abeja", "Hormiga", "Escarabajo"], correct: "Abeja", explanation: "Las abejas producen miel en sus colmenas." },
+            { question: "¿Qué gas necesitan las plantas para la fotosíntesis?", options: ["Oxígeno", "Nitrógeno", "Dióxido de carbono", "Hidrógeno"], correct: "Dióxido de carbono", explanation: "Las plantas usan dióxido de carbono y luz solar para producir glucosa." },
+            { question: "¿Qué animal es el más grande del mundo?", options: ["Elefante", "Ballena azul", "Tiburón", "Oso polar"], correct: "Ballena azul", explanation: "La ballena azul puede medir hasta 30 metros." },
+            { question: "¿Qué reptil cambia de color para camuflarse?", options: ["Serpiente", "Camaleón", "Lagarto", "Tortuga"], correct: "Camaleón", explanation: "Los camaleones cambian de color según su entorno." },
+            { question: "¿Qué ave no puede volar pero corre muy rápido?", options: ["Pingüino", "Avestruz", "Pavo", "Ganso"], correct: "Avestruz", explanation: "El avestruz es el ave más rápida en tierra." },
+            { question: "¿Qué mamífero pone huevos?", options: ["Canguro", "Ornitorrinco", "Delfín", "Murciélago"], correct: "Ornitorrinco", explanation: "El ornitorrinco es un monotremado que pone huevos." },
+            { question: "¿Qué parte de la planta realiza la fotosíntesis?", options: ["Raíz", "Tallo", "Hoja", "Flor"], correct: "Hoja", explanation: "Las hojas contienen clorofila para la fotosíntesis." },
+            { question: "¿Qué animal tiene el embarazo más largo?", options: ["Elefante", "Ballena", "Humano", "Jirafa"], correct: "Elefante", explanation: "El elefante africano tiene un embarazo de 22 meses." },
+            { question: "¿Cuántos huesos tiene el cuerpo humano adulto?", options: ["206", "180", "250", "300"], correct: "206", explanation: "Un adulto tiene 206 huesos, aunque nacemos con más que se fusionan con el tiempo." },
+            { question: "¿Qué órgano produce insulina?", options: ["Hígado", "Páncreas", "Riñón", "Estómago"], correct: "Páncreas", explanation: "El páncreas regula el azúcar en sangre mediante la insulina." },
+            { question: "¿Qué músculo es el más grande del cuerpo humano?", options: ["Bíceps", "Glúteo mayor", "Cuádriceps", "Pectoral"], correct: "Glúteo mayor", explanation: "El glúteo mayor es el músculo más grande y fuerte." },
+            { question: "¿Cuál es el hueso más largo del cuerpo?", options: ["Fémur", "Tibia", "Húmero", "Columna vertebral"], correct: "Fémur", explanation: "El fémur está en el muslo y mide cerca del 26% de la altura." },
+            { question: "¿Qué órgano es el más grande del cuerpo?", options: ["Hígado", "Piel", "Corazón", "Cerebro"], correct: "Piel", explanation: "La piel cubre todo el cuerpo y pesa unos 4 kg en promedio." },
+            { question: "¿Cuántas vértebras tiene la columna humana?", options: ["24", "33", "12", "40"], correct: "33", explanation: "Hay 33 vértebras, pero algunas se fusionan en el sacro y coxis." },
+            { question: "¿Qué parte del cerebro controla el equilibrio?", options: ["Cerebelo", "Lóbulo frontal", "Hipotálamo", "Tallo cerebral"], correct: "Cerebelo", explanation: "El cerebelo coordina movimientos y equilibrio." },
+            { question: "¿Qué tipo de sangre es donante universal?", options: ["A+", "AB-", "O-", "B+"], correct: "O-", explanation: "El tipo O- no tiene antígenos, por lo que es seguro para todos." },
+            { question: "¿Qué órgano filtra la sangre?", options: ["Hígado", "Riñones", "Bazo", "Páncreas"], correct: "Riñones", explanation: "Los riñones eliminan desechos y producen orina." },
+            { question: "¿Cuántos dientes tiene un adulto normalmente?", options: ["28", "32", "36", "40"], correct: "32", explanation: "Un adulto tiene 32 dientes, incluyendo las muelas del juicio." },
+            { question: "¿Quién escribió 'Don Quijote de la Mancha'?", options: ["Gabriel García Márquez", "Miguel de Cervantes", "William Shakespeare", "Jorge Luis Borges"], correct: "Miguel de Cervantes", explanation: "Cervantes publicó esta obra en 1605." },
+            { question: "¿Qué obra es de Shakespeare?", options: ["Cien Años de Soledad", "Romeo y Julieta", "El Aleph", "La Odisea"], correct: "Romeo y Julieta", explanation: "Romeo y Julieta es una tragedia de 1597." },
+            { question: "¿Qué novela escribió Jane Austen?", options: ["Cumbres Borrascosas", "Orgullo y Prejuicio", "Frankenstein", "Drácula"], correct: "Orgullo y Prejuicio", explanation: "Publicada en 1813, es una de sus obras más famosas." },
+            { question: "¿Quién creó al personaje Sherlock Holmes?", options: ["Agatha Christie", "Arthur Conan Doyle", "Edgar Allan Poe", "Charles Dickens"], correct: "Arthur Conan Doyle", explanation: "Doyle introdujo a Holmes en 1887." },
+            { question: "¿Qué poema épico escribió Homero?", options: ["La Ilíada", "Beowulf", "El Cantar de Roldán", "La Divina Comedia"], correct: "La Ilíada", explanation: "La Ilíada narra eventos de la Guerra de Troya." },
+            { question: "¿Quién inventó la bombilla comercialmente viable?", options: ["Thomas Edison", "Nikola Tesla", "Alexander Bell", "Guglielmo Marconi"], correct: "Thomas Edison", explanation: "Edison perfeccionó la bombilla en 1879." },
+            { question: "¿En qué año se lanzó el primer iPhone?", options: ["2005", "2007", "2010", "2012"], correct: "2007", explanation: "El primer iPhone fue presentado por Steve Jobs en 2007." },
+            { question: "¿Qué empresa creó el sistema operativo Windows?", options: ["Apple", "Microsoft", "Google", "IBM"], correct: "Microsoft", explanation: "Microsoft lanzó Windows en 1985." },
+            { question: "¿Quién inventó el teléfono?", options: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Guglielmo Marconi"], correct: "Alexander Graham Bell", explanation: "Bell patentó el teléfono en 1876." },
+            { question: "¿Qué lenguaje de programación creó Java?", options: ["Microsoft", "Sun Microsystems", "Apple", "Google"], correct: "Sun Microsystems", explanation: "Java fue lanzado en 1995 por Sun Microsystems." }
+        ];
+
+        // Elementos del DOM
+        let questionElement, optionsContainer, feedbackElement, explanationElement, nextBtn, correctCountElement, incorrectCountElement, questionNumberElement, questionBox, mainContent = document.getElementById('mainContent');
+
+        // Estado inicial
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let currentQuestion = null;
+        let questionCount = 0;
+        let totalQuestions = 0;
+        let selectedQuestions = [];
+
+        // Mezclar opciones
+        const shuffleArray = (array) => array.sort(() => Math.random() - 0.5);
+
+        // Seleccionar preguntas según cantidad
+        const selectQuestions = (amount) => {
+            totalQuestions = amount;
+            selectedQuestions = shuffleArray([...questions]).slice(0, amount);
+        };
+
+        // Generar pregunta
+        const generateQuestion = () => {
+            if (questionCount < totalQuestions) {
+                currentQuestion = selectedQuestions[questionCount];
+                questionElement.textContent = currentQuestion.question;
+                const shuffledOptions = shuffleArray([...currentQuestion.options]);
+                optionsContainer.innerHTML = '';
+                shuffledOptions.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.classList.add('option-btn');
+                    btn.textContent = option;
+                    btn.addEventListener('click', () => checkAnswer(option));
+                    optionsContainer.appendChild(btn);
+                });
+                feedbackElement.textContent = '';
+                explanationElement.textContent = '';
+                feedbackElement.classList.remove('feedback--visible', 'feedback--success', 'feedback--error');
+                questionBox.classList.remove('question-box--success');
+                questionNumberElement.textContent = questionCount + 1;
+                document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = false);
+            } else {
+                showResults();
+            }
+        };
+
+        // Verificar respuesta
+        const checkAnswer = (userAnswer) => {
+            const isCorrect = userAnswer === currentQuestion.correct;
+            feedbackElement.textContent = isCorrect ? '✔' : '✖';
+            feedbackElement.classList.add('feedback--visible', isCorrect ? 'feedback--success' : 'feedback--error');
+            explanationElement.textContent = currentQuestion.explanation;
+
+            if (isCorrect) {
+                correctCount++;
+                correctCountElement.textContent = correctCount;
+                questionBox.classList.add('question-box--success');
+            } else {
+                incorrectCount++;
+                incorrectCountElement.textContent = incorrectCount;
+            }
+
+            document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+            nextBtn.style.display = 'block';
+            questionCount++;
+        };
+
+        // Mostrar resultados
+        const showResults = () => {
+            let message = '';
+            const thresholdLow = totalQuestions * 0.4; // 40% (20/50, 10/25, 4/10)
+            const thresholdHigh = totalQuestions * 0.8; // 80% (40/50, 20/25, 8/10)
+            if (correctCount < thresholdLow) {
+                message = `¡Eres un burro! 🐴 Obtuviste ${correctCount} de ${totalQuestions} correctas.`;
+            } else if (correctCount <= thresholdHigh) {
+                message = `¡Eres un caballo! 🐎 Obtuviste ${correctCount} de ${totalQuestions} correctas.`;
+            } else {
+                message = `¡Eres un rinoceronte! 🦏 Obtuviste ${correctCount} de ${totalQuestions} correctas. ¡Impresionante!`;
+            }
+            
+            mainContent.innerHTML = `
+                <section class="result-box">
+                    <h2>¡Resultados!</h2>
+                    <p>${message}</p>
+                    <button class="next-btn" id="restartBtn">Volver a Jugar</button>
+                </section>
+            `;
+            document.getElementById('restartBtn').addEventListener('click', showStartScreen);
+        };
+
+        // Mostrar pantalla inicial
+        const showStartScreen = () => {
+            mainContent.innerHTML = `
+                <section class="start-box">
+                    <h2>Selecciona la cantidad de preguntas</h2>
+                    <button class="next-btn" onclick="startGame(10)">10 Preguntas</button>
+                    <button class="next-btn" onclick="startGame(25)">25 Preguntas</button>
+                    <button class="next-btn" onclick="startGame(50)">50 Preguntas</button>
+                </section>
+            `;
+        };
+
+        // Iniciar juego
+        const startGame = (amount) => {
+            correctCount = 0;
+            incorrectCount = 0;
+            questionCount = 0;
+            mainContent.innerHTML = `
+                <section class="question-box" id="questionBox">
+                    <h2 id="question"></h2>
+                    <div class="options" id="options"></div>
+                    <div class="feedback" id="feedback"></div>
+                    <p class="explanation" id="explanation"></p>
+                    <button class="next-btn" id="nextBtn" style="display: none;">Siguiente Pregunta</button>
+                </section>
+                <section class="score-box">
+                    <p>Correctas: <span id="correctCount">0</span> | Incorrectas: <span id="incorrectCount">0</span> | Pregunta <span id="questionNumber">1</span>/${amount}</p>
+                </section>
+            `;
+            setupDomReferences();
+            selectQuestions(amount);
+            generateQuestion();
+        };
+
+        // Configurar referencias al DOM después de iniciar
+        const setupDomReferences = () => {
+            questionElement = document.getElementById('question');
+            optionsContainer = document.getElementById('options');
+            feedbackElement = document.getElementById('feedback');
+            explanationElement = document.getElementById('explanation');
+            nextBtn = document.getElementById('nextBtn');
+            correctCountElement = document.getElementById('correctCount');
+            incorrectCountElement = document.getElementById('incorrectCount');
+            questionNumberElement = document.getElementById('questionNumber');
+            questionBox = document.getElementById('questionBox');
+            nextBtn.addEventListener('click', generateQuestion);
+        };
+
+        // Iniciar aplicación con pantalla de selección
+        showStartScreen();
+    </script>
+</body>
+</html>
